@@ -16,4 +16,4 @@ spec:
     spec:
       containers:
       - name: webapi
-        image: webapi:1.0.0
+        image: davidmordechai/aotwebapi:1.0.0
