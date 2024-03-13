@@ -1,0 +1,71 @@
+version: "3.8"
+services:
+  redis:
+    container_name: "redis"
+    image: "bitnami/redis:latest"
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+    - target: 6379
+      published: 6379
+    restart: unless-stopped
+    networks:
+      - my_network
+  grafana:
+    container_name: "grafana"
+    image: "grafana/grafana:latest"
+    ports:
+    - target: 3000
+      published: 3000
+    restart: unless-stopped
+    networks:
+      - my_network
+  prometheus:
+    container_name: "prometheus"
+    image: "prom/prometheus:latest"
+    ports:
+    - target: 9090
+      published: 9090
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - my_network
+  weatherapi:
+    container_name: "weatherapi"
+    image: "weatherapi:latest"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      GRAFANA_URL: "grafana:3000"
+    ports:
+    - target: 8080
+      published: 10000
+    - target: 8443
+      published: 10001
+    restart: unless-stopped
+    networks:
+      - my_network
+  frontend:
+    container_name: "frontend"
+    image: "frontend:latest"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      ConnectionStrings__rediscache: "redis"
+      GRAFANA_URL: "grafana:3000"
+      services__weatherapi__0: "http://weatherapi:8080"
+      services__weatherapi__1: "https://weatherapi:8443"
+    ports:
+    - target: 8080
+      published: 10002
+    - target: 8443
+      published: 10003
+    restart: unless-stopped
+    networks:
+      - my_network
+networks:
+  my_network: 
+    driver: bridge

@@ -1,0 +1,10 @@
+resources:
+- rediscache
+- grafana
+- prometheus
+- weatherapi
+- frontend
+
+generatorOptions:
+  disableNameSuffixHash: true
+
